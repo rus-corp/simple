@@ -12,7 +12,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_KEY")
+SECRET_KEY = os.getenv("DJANGO_SECRET")
 
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
@@ -47,7 +47,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'simplebank.urls'
+ROOT_URLCONF = 'simple_bank.urls'
 
 TEMPLATES = [
     {
@@ -64,7 +64,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'simplebank.wsgi.application'
+WSGI_APPLICATION = 'simple_bank.wsgi.application'
 AUTH_USER_MODEL = 'users.User'
 
 # Database

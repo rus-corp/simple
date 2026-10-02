@@ -5,6 +5,8 @@ from psycopg.errors import UniqueViolation
 from clients.models import ClientsORM
 from .errors import EmailAlreadyExists
 from accounts.service import AccountService
+from transactions.service import WelcomeBonusService
+
 
 
 
@@ -31,6 +33,9 @@ class RegistrationClientService:
 
                 account = AccountService().create(
                     client=client
+                )
+                WelcomeBonusService().grant(
+                    account_id=account.pk
                 )
 
         except IntegrityError as error:

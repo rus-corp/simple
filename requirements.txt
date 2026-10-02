@@ -1,0 +1,5 @@
+Django
+python-dotenv
+djangorestframework
+psycopg[binary]
+djangorestframework-simplejwt
