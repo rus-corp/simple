@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET")
 
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -182,11 +182,16 @@ LOGGING = {
             "level": "DEBUG",
             "formatter": "verbose",
         },
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "": {
             "level": "DEBUG",
-            "handlers": ["file"],
+            "handlers": ["file", "console"],
         },
     },
     "formatters": {

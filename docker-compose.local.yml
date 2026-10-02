@@ -1,0 +1,20 @@
+# Local development: only PostgreSQL in Docker, Django runs on the host.
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-simplebank}
+      POSTGRES_USER: ${DB_USER:-simplebank}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-simplebank}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - pg_data_local:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pg_data_local:

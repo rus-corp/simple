@@ -1,5 +1,8 @@
-Django
-python-dotenv
-djangorestframework
-psycopg[binary]
-djangorestframework-simplejwt
+Django==6.1.1
+python-dotenv==1.2.4
+djangorestframework==3.18.1
+psycopg[binary]==3.3.6
+djangorestframework-simplejwt==5.5.1
+gunicorn==26.2.0
+pytest==9.1.1
+pytest-django==4.14.0
