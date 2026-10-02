@@ -1,3 +1,4 @@
+import logging
 import secrets
 
 from django.db import IntegrityError, transaction
@@ -13,6 +14,8 @@ ACCOUNT_NUMBER_UNIQUE_CONSTRAINT = (
 )
 MAX_ACCOUNT_NUMBER_ATTEMPTS = 5
 
+logger = logging.getLogger(__name__)
+
 
 def generate_account_number() -> str:
     return f"{secrets.randbelow(10**10):010d}"
@@ -21,12 +24,14 @@ def generate_account_number() -> str:
 
 
 class AccountService:
+    "This class create accounts after registration"
     def create(
         self,
         *,
         client: ClientsORM
     ) -> AccountORM:
-        for _ in range(MAX_ACCOUNT_NUMBER_ATTEMPTS):
+        logger.info("Account creation started client_id=%s", client.pk)
+        for attempt in range(1, MAX_ACCOUNT_NUMBER_ATTEMPTS + 1):
             account_number = generate_account_number()
             try:
                 with transaction.atomic():
@@ -34,6 +39,10 @@ class AccountService:
                         client=client,
                         account_number=account_number
                     )
+                logger.info(
+                    "Account created account_id=%s account_number=%s client_id=%s attempt=%s",
+                    account.pk, account.account_number, client.pk, attempt,
+                )
                 return account
             except IntegrityError as error:
                 cause = error.__cause__
@@ -43,8 +52,19 @@ class AccountService:
                     and cause.diag.constraint_name
                     == ACCOUNT_NUMBER_UNIQUE_CONSTRAINT
                 ):
+                    logger.warning(
+                        "Account number collision, generating another one client_id=%s attempt=%s",
+                        client.pk, attempt,
+                    )
                     continue
+                logger.exception(
+                    "Account creation failed client_id=%s", client.pk,
+                )
                 raise
+        logger.error(
+            "Account creation failed: no unique account number after %s attempts client_id=%s",
+            MAX_ACCOUNT_NUMBER_ATTEMPTS, client.pk,
+        )
         raise AccountNumberGenerationError(
             "Could not generate a unique account number"
         )

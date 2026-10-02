@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'common.middleware.RequestContextMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -105,11 +106,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "users.authentication.ContextJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "EXCEPTION_HANDLER": "common.exceptions.logging_exception_handler",
     # Local development connects directly, without a trusted reverse proxy.
     "NUM_PROXIES": 0,
     # These limits count all requests per IP, including successful requests.
@@ -173,6 +175,11 @@ LOGGING = {
     #     }
     # }
     "disable_existing_loggers": False,
+    "filters": {
+        "request_context": {
+            "()": "common.logging.RequestContextFilter",
+        },
+    },
     "handlers": {
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
@@ -181,11 +188,13 @@ LOGGING = {
             "backupCount": 30,
             "level": "DEBUG",
             "formatter": "verbose",
+            "filters": ["request_context"],
         },
         "console": {
             "class": "logging.StreamHandler",
             "level": "INFO",
             "formatter": "verbose",
+            "filters": ["request_context"],
         },
     },
     "loggers": {
@@ -193,10 +202,15 @@ LOGGING = {
             "level": "DEBUG",
             "handlers": ["file", "console"],
         },
+        # 4xx responses are already logged with their reason by the API
+        # exception handler; Django repeats them outside the request context.
+        "django.request": {
+            "level": "ERROR",
+        },
     },
     "formatters": {
         "verbose": {
-            "format": "{name} {levelname} {asctime} {module} {lineno} {process:d} {thread:d} {message}",
+            "format": "{asctime} {levelname} trace={trace_id} user={user_id} {name} {module} {lineno} {process:d} {thread:d} {message}",
             "style": "{",
         },
         "simple": {

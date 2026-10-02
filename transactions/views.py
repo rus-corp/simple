@@ -1,3 +1,5 @@
+import logging
+
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -18,6 +20,7 @@ from .pagination import TransactionPagination
 from .mixin import UserTransactionsMixin
 
 
+logger = logging.getLogger(__name__)
 
 
 
@@ -25,9 +28,14 @@ class CreateTransferApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        logger.info("Transfer requested")
         serializer = CreateTransferSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        logger.info(
+            "Transfer request is valid receiver_account_number=%s amount=%s",
+            data['receiver_account_number'], data['amount'],
+        )
 
         sender = get_object_or_404(
             AccountORM,
@@ -76,6 +84,10 @@ class ReadTransactionsApiView(
 
     def get_queryset(self):
         params = self.request.query_params
+        logger.info(
+            "Transaction history requested from=%s to=%s",
+            params.get("from", "-"), params.get("to", "-"),
+        )
         filters = TransactionFiltersSerializer(data={
             field: params[param]
             for param, field in [("from", "from_date"), ("to", "to_date")]
@@ -90,10 +102,25 @@ class ReadTransactionsApiView(
             queryset = queryset.filter(created_at__date__lte=dates["to_date"])
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        logger.info(
+            "Transaction history returned total=%s on_page=%s",
+            response.data["count"], len(response.data["results"]),
+        )
+        return response
+
 
 
 class ReadTransactionApiView(
     UserTransactionsMixin,
     generics.RetrieveAPIView
 ):
-    pass
+    def get_object(self):
+        logger.info("Transaction requested entry_id=%s", self.kwargs["pk"])
+        entry = super().get_object()
+        logger.info(
+            "Transaction returned entry_id=%s category=%s amount=%s",
+            entry.pk, entry.category, entry.amount,
+        )
+        return entry

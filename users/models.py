@@ -48,6 +48,7 @@ class UsersManager(BaseUserManager):
 
 
 class User(AbstractUser, UUIDModel):
+    "User model for authentification and registration. Dont have balance, account and transactions"
     username = None
     email = models.EmailField(unique=True)
     
